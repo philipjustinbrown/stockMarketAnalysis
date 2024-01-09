@@ -38,10 +38,8 @@ def stock_input():
 
     while True:
         try:
-            tickers = re.split(r"\W+", input("Enter Stock Ticker(s), 'Return' to return to selection screen, or 'Exit': ").upper())
+            tickers = re.split(r"\W+", input("Enter Stock Ticker(s), 'Return' to return to selection screen: ").upper())
 
-            if 'EXIT' in tickers:
-                sys.exit()
             if 'RETURN' in tickers:
                 return None
 
@@ -54,12 +52,10 @@ def stock_input():
 
         return ticker_list
 
-def valid_date(d):
+def valid_date(date_check):
     while True:
         try:
-            date_input = input(d)
-            if date_input.upper() == 'EXIT':
-                sys.exit()
+            date_input = input(date_check)
             if date_input.upper() == 'RETURN':
                 return None
                 
@@ -71,18 +67,18 @@ def valid_date(d):
 
         return date_input
         
-def stock_download(t):
+def stock_download(tickers):
     df_list = {}
-    start_date = valid_date("Enter start date (YYYY-MM-DD), 'Return' to return to selection screen, or 'Exit': ")
+    start_date = valid_date("Enter start date (YYYY-MM-DD), 'Return' to return to selection screen: ")
     if start_date == None:
         return user_inputs()
-    end_date = valid_date("Enter end date (YYYY-MM-DD), 'Return' to return to selection screen, or 'Exit': ")
+    end_date = valid_date("Enter end date (YYYY-MM-DD), 'Return' to return to selection screen: ")
     if end_date == None:
         return user_inputs()
 
     while True:
         try:
-            for ticker in t:
+            for ticker in tickers:
                 stock_data = yf.download(ticker, start=start_date, end=end_date, group_by='ticker')
                 stock_data = stock_data.reset_index()
                 df_list[ticker] = stock_data 
@@ -91,10 +87,10 @@ def stock_download(t):
 
         return df_list
    
-def line_chart(t): 
+def line_chart(tickers): 
     fig = go.Figure()
 
-    for ticker, df in t.items():
+    for ticker, df in tickers.items():
         fig.add_trace(go.Scatter(
             x=df['Date'],
             y=df['Close'],
@@ -111,10 +107,10 @@ def line_chart(t):
         xaxis_rangeslider_visible=True)
     fig.show()
   
-def area_chart(t):
+def area_chart(tickers):
     fig = go.Figure()
 
-    for ticker, df in t.items():
+    for ticker, df in tickers.items():
         fig.add_trace(go.Scatter(
             x=df['Date'],
             y=df['Close'],
@@ -132,14 +128,14 @@ def area_chart(t):
         xaxis_rangeslider_visible=True)
     fig.show()
 
-def moving_area(t):
+def moving_area(tickers):
     fig = go.Figure()
 
-    for ticker, df in t.items():
+    for ticker, df in tickers.items():
         df['MA10'] = df['Close'].rolling(window=10).mean().reset_index(0, drop=True)
         df['MA20'] = df['Close'].rolling(window=20).mean().reset_index(0, drop=True)
 
-    for ticker, df in t.items():
+    for ticker, df in tickers.items():
         fig.add_trace(go.Scatter(
             x=df['Date'],
             y=df['Close'],
@@ -149,7 +145,7 @@ def moving_area(t):
             hoverinfo='all',
             ))
         
-    for ticker, df in t.items():
+    for ticker, df in tickers.items():
         fig.add_trace(go.Scatter(
             x=df['Date'],
             y=df['MA10'],
@@ -163,7 +159,7 @@ def moving_area(t):
             hoverinfo='all',
             ))
         
-    for ticker, df in t.items():
+    for ticker, df in tickers.items():
         fig.add_trace(go.Scatter(
             x=df['Date'],
             y=df['MA20'],
@@ -176,13 +172,19 @@ def moving_area(t):
             showlegend=True,
             hoverinfo='all',
             ))
+        
+    fig.update_layout(
+        title='Stock Market Performance',
+        xaxis_title='Date',
+        yaxis_title='Price',
+        xaxis_rangeslider_visible=True)
 
     fig.show()
 
-def candlestick_graph(t):
+def candlestick_graph(tickers):
     fig = go.Figure()
 
-    for ticker, df in t.items():
+    for ticker, df in tickers.items():
         fig.add_trace(go.Candlestick(
             x=df["Date"],
             open=df["Open"], 
@@ -192,7 +194,7 @@ def candlestick_graph(t):
             name=ticker,
             showlegend=True))
 
-    for ticker, df in t.items():
+    for ticker, df in tickers.items():
         fig.add_trace(go.Scatter(
             x=df['Date'],
             y=df['Close'],
@@ -202,7 +204,11 @@ def candlestick_graph(t):
             hoverinfo='all',
             ))
           
-    fig.update_layout(title = "Stock Price Analysis", xaxis_rangeslider_visible=True)
+    fig.update_layout(
+        title='Stock Market Performance',
+        xaxis_title='Date',
+        yaxis_title='Price',
+        xaxis_rangeslider_visible=True)
 
     fig.show()
 
